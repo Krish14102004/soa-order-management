@@ -101,7 +101,12 @@ export function listProducts(
       null,
     );
   }
-  return dispatch(service.service_name, operation.name, {});
+  return dispatch(
+    service.service_name,
+    operation.name,
+    operation.contract_version,
+    {},
+  );
 }
 
 export function createOrder(
@@ -117,12 +122,18 @@ export function createOrder(
       null,
     );
   }
-  return dispatch(service.service_name, operation.name, { items });
+  return dispatch(
+    service.service_name,
+    operation.name,
+    operation.contract_version,
+    { items },
+  );
 }
 
 function dispatch<T>(
   service: string,
   operation: string,
+  contractVersion: string,
   payload: unknown,
 ): Promise<DispatchResponse<T>> {
   return request('/api/esb/dispatch', {
@@ -132,7 +143,7 @@ function dispatch<T>(
       correlation_id: crypto.randomUUID(),
       service,
       operation,
-      contract_version: 'v1',
+      contract_version: contractVersion,
       payload,
     }),
   });

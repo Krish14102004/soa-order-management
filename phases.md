@@ -63,7 +63,7 @@ Exit criteria:
 - Failure cases are handled and traceable. **Verified for invalid contracts, unknown services/operations, timeout, unavailability, and provider business errors.**
 
 ## Phase 4 — Consumer UI and End-to-End Workflow
-**Status:** NOT STARTED
+**Status:** COMPLETED
 
 Tasks:
 - Build dashboard and architecture view.
@@ -74,9 +74,9 @@ Tasks:
 - Add end-to-end tests.
 
 Exit criteria:
-- A user can discover services and place an order through the UI.
-- The request uses published contracts and ESB routing.
-- UI displays real response and trace data.
+- A user can discover services and place an order through the UI. **Verified in a local browser.**
+- The request uses published contracts and ESB routing. **Verified by a browser order and gateway trace.**
+- UI displays real response and trace data. **Verified for success and unavailable-inventory error responses.**
 
 ## Phase 5 — Persistence, Configuration, and Local Orchestration
 **Status:** NOT STARTED

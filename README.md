@@ -15,7 +15,7 @@ Read these before implementation:
 
 ## Current status
 
-Phases 1–3 are implemented and verified. The backend exposes the Catalog and Order providers, a demo-only registry, and an HTTP ESB with correlation-aware traces. The React UI remains a scaffold; connecting it to these APIs is Phase 4.
+Phases 1–4 are implemented and verified. The React consumer discovers providers through the registry, sends catalog and order requests through the ESB, and displays real orders and message traces.
 
 ## Prerequisites
 
@@ -96,7 +96,9 @@ npm.cmd run build
 npm.cmd run dev -- --host 127.0.0.1
 ```
 
-The build should complete without TypeScript or Vite errors. Open <http://127.0.0.1:5173/> to see the overview shell. The UI is still a scaffold; API-backed discovery, order placement, routing, and traces are Phase 4 work.
+The build should complete without TypeScript or Vite errors. Open <http://127.0.0.1:5173/> to use the dashboard, inspect discovered services and traces, and place a real order through the ESB.
+
+The consumer uses `VITE_API_BASE_URL` for the backend origin and defaults to `http://127.0.0.1:8000`. To override it, copy `frontend\.env.example` to `frontend\.env.local`, edit the URL, and restart Vite.
 
 ## Configuration note
 
@@ -106,4 +108,4 @@ Orders and products use separate tables in the local SQLite file. The Catalog Se
 
 ## Next
 
-Phase 3 is complete. Phase 4 connects the React consumer to the registry and ESB APIs and displays real orders and message traces.
+Phase 4 is complete. Phase 5 can refine persistence and local orchestration; Phase 6 remains for final demo and submission quality checks.
