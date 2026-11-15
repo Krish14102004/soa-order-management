@@ -79,34 +79,34 @@ Exit criteria:
 - UI displays real response and trace data. **Verified for success and unavailable-inventory error responses.**
 
 ## Phase 5 — Persistence, Configuration, and Local Orchestration
-**Status:** NOT STARTED
+**Status:** COMPLETED
 
 Tasks:
-- Finalize database initialization and seed data.
-- Add environment-driven configuration.
-- Add Docker Compose if it improves reproducibility.
-- Verify clean startup and shutdown.
-- Document reset and troubleshooting steps.
+- Finalize database initialization and seed data. **Verified: startup initializes tables and seeds missing products idempotently; products and orders survive an application restart.**
+- Add environment-driven configuration. **Verified/documented: database path, provider URLs, and bounded service timeout are configurable through process environment variables.**
+- Evaluate Docker Compose. **Not added: the demo has no external infrastructure and its single backend/Vite local workflow is simpler without containers.**
+- Verify clean startup and shutdown. **Verified through separate TestClient lifespan startup/shutdown cycles; database connections close per operation.**
+- Document reset and troubleshooting steps. **Documented in README.md, including a non-destructive fresh-database option.**
 
 Exit criteria:
-- Application can be started consistently from documented commands.
-- Data ownership and persistence limitations are documented.
+- Application can be started consistently from documented commands. **Verified through the documented local workflow and backend lifespan tests.**
+- Data ownership and persistence limitations are documented. **Catalog and Order own separate tables; SQLite records persist, while registry and traces are in-memory.**
 
 ## Phase 6 — Quality, Demonstration, and Submission
-**Status:** NOT STARTED
+**Status:** COMPLETED
 
 Tasks:
-- Run all tests and fix defects.
-- Check validation, unknown service, provider down, timeout, and invalid contract cases.
-- Prepare architecture diagram and demo script.
-- Explain how each of the four SOA tenets is implemented.
-- Capture screenshots only after the application works.
-- Review documentation for accuracy.
+- Run all tests and fix defects. **Verified: 28 backend tests pass and the frontend production build succeeds.**
+- Check validation, unknown service, provider down, timeout, and invalid contract cases. **Covered by ESB/provider tests; successful and business-error UI flows were browser-verified in Phase 4.**
+- Prepare architecture diagram and demo script. **The dashboard architecture map is complete; `docs/demo-script.md` documents the local walkthrough.**
+- Explain how each of the four SOA tenets is implemented. **Documented in the demo script with component evidence.**
+- Capture screenshots only after the application works. **No screenshots committed; none are required for the local walkthrough.**
+- Review documentation for accuracy. **README, architecture, phase tracker, API contracts, decisions, and demo script reviewed against the implementation.**
 
 Exit criteria:
-- Acceptance criteria in `PRD.md` are met.
-- Demo can be completed from a clean start.
-- No unverified claims remain in documentation.
+- Acceptance criteria in `PRD.md` are met. **Verified by backend/API tests and prior browser workflow.**
+- Demo can be completed from a clean start. **Documented startup, fresh database, health check, order, and error demonstration steps.**
+- No unverified claims remain in documentation. **Test counts and persistence/registry limitations are stated explicitly.**
 
 ## Working Agreement
 - Complete phases in order unless a dependency requires parallel work.

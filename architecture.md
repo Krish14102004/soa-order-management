@@ -39,7 +39,6 @@ soa-order-management/
 ├── README.md                       # Setup, run, test, and demo instructions
 ├── .env.example                    # Documented environment variables; Phase 1
 ├── .gitignore                      # Ignore generated files and secrets; Phase 1
-├── docker-compose.yml               # Local orchestration; Phase 5
 ├── backend/
 │   ├── requirements.txt            # Python dependencies; Phase 1
 │   ├── app/
@@ -106,6 +105,8 @@ soa-order-management/
     ├── demo-script.md                  # Presentation walkthrough; Phase 6
     └── decisions.md                    # Architecture decision records; ongoing
 ```
+
+Docker Compose is intentionally not included: the current local demo has one FastAPI process and a Vite development server, with no external infrastructure to orchestrate.
 
 ## 5. Technology Stack
 - Frontend: React, TypeScript, Vite.

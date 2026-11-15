@@ -20,3 +20,9 @@ Record dated decisions here. Each entry should include context, decision, altern
 - Transport: Use HTTPX for ESB-to-provider and Order-to-Catalog HTTP calls, with environment-configurable loopback service URLs and a bounded timeout. The gateway validates v1 operation payloads and responses against shared contracts.
 - Inventory behavior: Order placement checks availability but does not reserve/decrement stock. Reservation and compensation are deferred because v1 has no reservation contract; repeated orders can therefore exceed the displayed stock.
 - Consequences: This remains a single-process educational deployment. Separate provider processes can be configured later, but their endpoints must remain explicitly trusted and local for the demo.
+
+## 2026-11-15 — Phase 5 local persistence and orchestration
+- Context: Phase 5 required reproducible local startup, clear persistence behavior, and consideration of Docker Compose.
+- Decision: Keep standard-library SQLite with separate Catalog and Order tables in one configurable database file. Initialize schemas and insert only missing seed products during application startup. Use environment variables for the database path, provider base URLs, and bounded HTTP timeout. Do not add Docker Compose for the current single-backend/Vite workflow because it has no external infrastructure dependency.
+- Alternatives considered: Add a containerized frontend/backend stack or split providers into separate containers. Neither improves the current local educational workflow enough to justify extra setup and networking configuration.
+- Consequences: Orders and Catalog records persist in SQLite across restarts; registry entries and message traces are process-local and are recreated/reset at startup. A new database path provides a clean demo without deleting existing data. The local process can be stopped with Ctrl+C; SQLite connections are scoped to individual operations.

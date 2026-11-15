@@ -12,10 +12,11 @@ Read these before implementation:
 - `design.md` — visual design system.
 - `memory.md` — progress log.
 - `AI_AGENT_PROMPT.md` — implementation assistant guidance.
+- `docs/demo-script.md` — verified local demonstration walkthrough.
 
 ## Current status
 
-Phases 1–4 are implemented and verified. The React consumer discovers providers through the registry, sends catalog and order requests through the ESB, and displays real orders and message traces.
+Phases 1–6 are implemented and verified. The React consumer discovers providers through the registry, sends catalog and order requests through the ESB, and displays real orders and message traces. SQLite-backed product and order data survives backend restarts; registry entries and ESB traces are recreated in memory at startup. See [docs/demo-script.md](docs/demo-script.md) for a Windows-first walkthrough.
 
 ## Prerequisites
 
@@ -46,7 +47,7 @@ py -3.13 -m venv .venv
 
 Replace `3.13` with your installed Python version if it is 3.11 or later.
 
-The test command should report 27 passing tests. Leave the backend running, then check it from another terminal:
+The test command should report 28 passing tests. Leave the backend running, then check it from another terminal:
 
 ```powershell
 curl.exe -i http://127.0.0.1:8000/health
@@ -104,8 +105,39 @@ The consumer uses `VITE_API_BASE_URL` for the backend origin and defaults to `ht
 
 The app reads `DATABASE_PATH`, `CATALOG_SERVICE_URL`, `ORDER_SERVICE_URL`, and `ESB_TIMEOUT_SECONDS` from the process environment. Defaults are documented in the root `.env.example`; the application does not automatically load that file. Set environment variables in the same PowerShell window before starting Uvicorn if you need non-default values. Service URLs must point to local loopback HTTP endpoints; the timeout must be greater than zero and at most 60 seconds.
 
-Orders and products use separate tables in the local SQLite file. The Catalog Service checks stock but does not reserve or decrement inventory; repeated orders can exceed the displayed stock. The registry is in-memory and provider registration is intended for trusted local demo use only.
+The default database path, `.\soa_orders.db`, is relative to the backend working directory used in the commands above. On startup, the app creates missing tables and inserts the three synthetic Catalog products only when their IDs are absent. Catalog products and orders use separate tables in this SQLite file and persist across backend restarts. The Catalog Service checks stock but does not reserve or decrement inventory; repeated orders can exceed the displayed stock. The registry and ESB traces are in-memory and reset whenever the backend restarts. Provider registration is intended for trusted local demo use only.
+
+To start with a separate, clean database without deleting existing data, use a different file path in the backend terminal before starting Uvicorn:
+
+```powershell
+$env:DATABASE_PATH = ".\soa_orders_fresh.sqlite3"
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The new file receives the usual synthetic seed products. To return to the default path in that terminal, run `Remove-Item Env:DATABASE_PATH` after stopping the server. Keep each chosen database file if you want to preserve its orders.
+
+### Configuration example
+
+Set overrides in the same PowerShell window that starts Uvicorn. For example, to run the backend on port 8001 when port 8000 is occupied:
+
+```powershell
+$env:DATABASE_PATH = ".\soa_orders_port8001.sqlite3"
+$env:CATALOG_SERVICE_URL = "http://127.0.0.1:8001"
+$env:ORDER_SERVICE_URL = "http://127.0.0.1:8001"
+$env:ESB_TIMEOUT_SECONDS = "3"
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+For the frontend in this setup, set `VITE_API_BASE_URL=http://127.0.0.1:8001` in `frontend\.env.local` and restart Vite. These provider URLs point back to the same API process; separate provider processes are not required for the local demo.
+
+### Troubleshooting and shutdown
+
+- **Backend connection error:** Confirm the backend is running and `curl.exe -i http://127.0.0.1:8000/health` returns HTTP 200. If using another port, use it consistently for the backend URL settings and frontend `VITE_API_BASE_URL`.
+- **Port already in use:** Do not start a second backend on that port. Use the port-8001 configuration above, or stop the backend you started in its own terminal with `Ctrl+C`.
+- **Python cannot import `app`:** Run backend commands from the `backend` directory as shown; the documented module invocation is `python.exe -m pytest`.
+- **Frontend still uses an old backend URL:** Stop and restart Vite after changing `frontend\.env.local`.
+- **Stop the services:** Press `Ctrl+C` in each terminal running Uvicorn or Vite. Database connections are opened per operation and closed by SQLite context managers; there is no persistent database connection to shut down separately.
 
 ## Next
 
-Phase 4 is complete. Phase 5 can refine persistence and local orchestration; Phase 6 remains for final demo and submission quality checks.
+All six implementation phases are complete. Run the tests and follow [docs/demo-script.md](docs/demo-script.md) to demonstrate the application.

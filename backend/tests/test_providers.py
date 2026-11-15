@@ -101,3 +101,36 @@ def test_service_call_propagates_correlation_id_to_provider(client: TestClient):
 
     assert response.status_code == 201
     assert response.headers["X-Correlation-ID"] == correlation_id
+
+
+def test_database_data_survives_application_restart(tmp_path):
+    original_database_path = app.state.database_path
+    original_transport = app.state.http_transport
+    app.state.database_path = str(tmp_path / "data" / "orders.sqlite3")
+    app.state.http_transport = httpx.ASGITransport(app=app)
+    try:
+        with TestClient(app) as first_client:
+            products = first_client.get("/api/catalog/products")
+            order_response = first_client.post(
+                "/api/orders",
+                json={"items": [{"product_id": "book-soa-101", "quantity": 1}]},
+            )
+            assert products.status_code == 200
+            assert len(products.json()["products"]) == 3
+            assert order_response.status_code == 201
+            order = order_response.json()
+
+        with TestClient(app) as restarted_client:
+            products_after_restart = restarted_client.get("/api/catalog/products")
+            saved_order = restarted_client.get(f"/api/orders/{order['order_id']}")
+            services_after_restart = restarted_client.get("/api/registry/services")
+
+        assert products_after_restart.status_code == 200
+        assert len(products_after_restart.json()["products"]) == 3
+        assert saved_order.status_code == 200
+        assert saved_order.json() == order
+        assert services_after_restart.status_code == 200
+        assert len(services_after_restart.json()) == 2
+    finally:
+        app.state.database_path = original_database_path
+        app.state.http_transport = original_transport
