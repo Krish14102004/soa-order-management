@@ -1,0 +1,32 @@
+/* Phase 1: global reset and design tokens from design.md. */
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #F5F7FA;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --primary: #3446A5;
+  --muted: #64748B;
+  --border: #E2E8F0;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+.shell { max-width: 1180px; margin: 0 auto; padding: 36px 28px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 26px; border-bottom: 1px solid var(--border); }
+h1 { margin: 5px 0 0; font-size: 22px; letter-spacing: -0.04em; }
+.eyebrow { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .13em; }
+.status { color: var(--muted); font-size: 12px; border: 1px solid var(--border); background: white; border-radius: 99px; padding: 8px 12px; }
+.status i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #B7791F; }
+.intro { padding: 54px 0 30px; max-width: 720px; }
+h2 { margin: 10px 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.045em; line-height: 1.12; }
+.subtext { color: var(--muted); font-size: 15px; line-height: 1.7; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.component-card { min-height: 160px; padding: 20px; background: white; border: 1px solid var(--border); border-radius: 14px; }
+.number { color: #94A3B8; font: 12px ui-monospace, monospace; }
+h3 { margin: 22px 0 7px; font-size: 15px; }
+.component-card p, .notice p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.tag { display: inline-block; margin-top: 6px; padding: 4px 8px; color: var(--primary); background: #EEF1FF; border-radius: 5px; font-size: 10px; font-weight: 700; }
+.notice { margin-top: 22px; padding: 20px 22px; border: 1px solid #D9E0F7; border-radius: 12px; background: #F0F3FF; }
+.notice p { margin-bottom: 0; }
+footer { display: flex; justify-content: space-between; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+@media (max-width: 600px) { .shell { padding: 22px 16px; } .topbar { align-items: flex-start; flex-direction: column; } .intro { padding-top: 38px; } }

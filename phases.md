@@ -1,0 +1,115 @@
+# Implementation Phases
+
+Status values: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `COMPLETED`.
+
+## Phase 0 — Requirements and Repository Review
+**Status:** COMPLETED (initial planning package)
+
+Tasks:
+- Confirm the e-commerce/mail-order demonstration scenario.
+- Define users, features, requirements, and acceptance criteria.
+- Agree on stack and service boundaries.
+- Review this plan before implementation.
+
+Exit criteria:
+- PRD and architecture are reviewed and approved.
+
+## Phase 1 — Repository and Development Environment
+**Status:** COMPLETED
+
+Tasks:
+- Create frontend and backend project skeletons.
+- Add dependency manifests, environment example, ignore rules, and README.
+- Configure FastAPI entry point and React/Vite entry point.
+- Verify both applications start locally.
+
+Human tasks:
+- Python 3.13, Node.js, and npm were available; local virtual environment and frontend dependencies were installed.
+
+Exit criteria:
+- Backend health endpoint responds. **Verified by developer.**
+- Frontend loads in a browser. **Verified by developer.**
+- Setup instructions work from a clean environment. **Backend test and frontend build/run verified by developer.**
+
+## Phase 2 — Contracts and Service Registry
+**Status:** COMPLETED
+
+Tasks:
+- Define Catalog and Order request/response contracts.
+- Define common message/error metadata.
+- Implement service registration, listing, and discovery.
+- Publish contract references and service metadata.
+- Add unit tests.
+
+Exit criteria:
+- Services can be registered and discovered. **Verified by registry tests.**
+- Invalid metadata/payloads are rejected predictably. **Verified by contract and API validation tests.**
+- Contract and registry tests pass. **11 backend tests pass; frontend production build succeeds.**
+
+## Phase 3 — Providers and ESB
+**Status:** COMPLETED
+
+Tasks:
+- Implement Catalog Service.
+- Implement Order Service and persistence.
+- Implement ESB dispatch and destination resolution.
+- Add correlation IDs, routing logs, timeout handling, and structured errors.
+- Keep business logic out of the ESB.
+- Add service and ESB tests.
+
+Exit criteria:
+- A request sent to the ESB reaches the correct provider. **Verified by dispatch tests.**
+- Provider response returns through the gateway. **Verified by typed provider response tests.**
+- Failure cases are handled and traceable. **Verified for invalid contracts, unknown services/operations, timeout, unavailability, and provider business errors.**
+
+## Phase 4 — Consumer UI and End-to-End Workflow
+**Status:** NOT STARTED
+
+Tasks:
+- Build dashboard and architecture view.
+- Build registry/discovery screen.
+- Build product browsing and order placement UI.
+- Display lifecycle steps and message traces.
+- Connect UI to real backend APIs.
+- Add end-to-end tests.
+
+Exit criteria:
+- A user can discover services and place an order through the UI.
+- The request uses published contracts and ESB routing.
+- UI displays real response and trace data.
+
+## Phase 5 — Persistence, Configuration, and Local Orchestration
+**Status:** NOT STARTED
+
+Tasks:
+- Finalize database initialization and seed data.
+- Add environment-driven configuration.
+- Add Docker Compose if it improves reproducibility.
+- Verify clean startup and shutdown.
+- Document reset and troubleshooting steps.
+
+Exit criteria:
+- Application can be started consistently from documented commands.
+- Data ownership and persistence limitations are documented.
+
+## Phase 6 — Quality, Demonstration, and Submission
+**Status:** NOT STARTED
+
+Tasks:
+- Run all tests and fix defects.
+- Check validation, unknown service, provider down, timeout, and invalid contract cases.
+- Prepare architecture diagram and demo script.
+- Explain how each of the four SOA tenets is implemented.
+- Capture screenshots only after the application works.
+- Review documentation for accuracy.
+
+Exit criteria:
+- Acceptance criteria in `PRD.md` are met.
+- Demo can be completed from a clean start.
+- No unverified claims remain in documentation.
+
+## Working Agreement
+- Complete phases in order unless a dependency requires parallel work.
+- Do not mark a phase completed until its exit criteria are verified.
+- Ask the developer for required manual actions with exact steps.
+- Update `memory.md` after each meaningful work session.
