@@ -25,7 +25,10 @@ def test_providers_publish_service_descriptions(client: TestClient):
     assert response.status_code == 200
     services = {service["service_name"]: service for service in response.json()}
     assert services["catalog-service"]["endpoint"] == "http://127.0.0.1:8000/"
-    assert services["order-service"]["operations"][0]["name"] == "create-order"
+    order_operations = {
+        operation["name"] for operation in services["order-service"]["operations"]
+    }
+    assert {"list-orders", "create-order", "get-order"} <= order_operations
 
 
 def test_catalog_lists_seeded_products_and_checks_availability(client: TestClient):
@@ -53,6 +56,33 @@ def test_order_provider_checks_catalog_and_persists_order(client: TestClient):
     saved = client.get(f"/api/orders/{order['order_id']}")
     assert saved.status_code == 200
     assert saved.json() == order
+
+
+def test_order_provider_lists_saved_orders_newest_first(client: TestClient):
+    older_order = client.post(
+        "/api/orders",
+        json={"items": [{"product_id": "book-soa-101", "quantity": 1}]},
+    ).json()
+    newer_order = client.post(
+        "/api/orders",
+        json={"items": [{"product_id": "mug-blue", "quantity": 2}]},
+    ).json()
+
+    response = client.get("/api/orders")
+
+    assert response.status_code == 200
+    orders = response.json()["orders"]
+    assert [order["order_id"] for order in orders] == [
+        newer_order["order_id"],
+        older_order["order_id"],
+    ]
+
+
+def test_order_provider_returns_empty_history_when_no_orders_exist(client: TestClient):
+    response = client.get("/api/orders")
+
+    assert response.status_code == 200
+    assert response.json() == {"orders": []}
 
 
 def test_order_provider_rejects_unavailable_product(client: TestClient):

@@ -96,7 +96,7 @@ Exit criteria:
 **Status:** COMPLETED
 
 Tasks:
-- Run all tests and fix defects. **Verified: 28 backend tests pass and the frontend production build succeeds.**
+- Run all tests and fix defects. **Verified at Phase 6 completion: 28 backend tests pass and the frontend production build succeeds.**
 - Check validation, unknown service, provider down, timeout, and invalid contract cases. **Covered by ESB/provider tests; successful and business-error UI flows were browser-verified in Phase 4.**
 - Prepare architecture diagram and demo script. **The dashboard architecture map is complete; `docs/demo-script.md` documents the local walkthrough.**
 - Explain how each of the four SOA tenets is implemented. **Documented in the demo script with component evidence.**

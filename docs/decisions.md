@@ -26,3 +26,9 @@ Record dated decisions here. Each entry should include context, decision, altern
 - Decision: Keep standard-library SQLite with separate Catalog and Order tables in one configurable database file. Initialize schemas and insert only missing seed products during application startup. Use environment variables for the database path, provider base URLs, and bounded HTTP timeout. Do not add Docker Compose for the current single-backend/Vite workflow because it has no external infrastructure dependency.
 - Alternatives considered: Add a containerized frontend/backend stack or split providers into separate containers. Neither improves the current local educational workflow enough to justify extra setup and networking configuration.
 - Consequences: Orders and Catalog records persist in SQLite across restarts; registry entries and message traces are process-local and are recreated/reset at startup. A new database path provides a clean demo without deleting existing data. The local process can be stopped with Ctrl+C; SQLite connections are scoped to individual operations.
+
+## 2026-11-16 — Order history capability
+- Context: The consumer could create orders and retrieve one by ID, but had no public way to review saved orders.
+- Decision: Add `GET /api/orders` to the Order provider and expose it as the discovered `list-orders` v1 operation. The provider returns a typed `OrderListResponse` ordered newest first; the consumer retrieves it through ESB dispatch and renders a dedicated Order History page.
+- Alternatives considered: Browser-local history would disappear on reload and could diverge from persisted orders; direct database access from the UI would violate service boundaries.
+- Consequences: Order history remains available across browser and backend restarts when using the same SQLite database. It contains order data only, with no customer-identifying or payment information.

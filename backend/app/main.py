@@ -70,6 +70,11 @@ async def lifespan(application: FastAPI):
             contract_url="/openapi.json",
             operations=[
                 ServiceOperation(
+                    name="list-orders",
+                    method="GET",
+                    path="/api/orders",
+                ),
+                ServiceOperation(
                     name="create-order",
                     method="POST",
                     path="/api/orders",

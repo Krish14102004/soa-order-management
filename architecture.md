@@ -145,6 +145,7 @@ Do not wrap every REST request in an unnecessary custom envelope if it makes nor
 - `GET /api/catalog/products/{product_id}`
 - `POST /api/esb/dispatch`
 - `POST /api/orders` (provider endpoint, preferably reached through ESB by the consumer)
+- `GET /api/orders` (Order Service history)
 - `GET /api/orders/{order_id}`
 
 Finalize paths and payloads before implementing dependent frontend code.

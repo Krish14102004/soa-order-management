@@ -143,6 +143,21 @@ def test_gateway_dispatches_catalog_get_operation(client: TestClient):
     assert len(response.json()["payload"]["products"]) == 3
 
 
+def test_gateway_dispatches_order_history_and_traces_it(client: TestClient):
+    created_order = client.post("/api/esb/dispatch", json=envelope()).json()["payload"]
+    history = client.post(
+        "/api/esb/dispatch",
+        json=envelope(operation="list-orders", payload={}),
+    )
+
+    assert history.status_code == 200
+    result = history.json()
+    assert result["status_code"] == 200
+    assert result["payload"]["orders"] == [created_order]
+    assert result["operation"] == "list-orders"
+    assert client.get("/api/esb/traces").json()[0]["destination"] == "order-service:list-orders"
+
+
 def test_gateway_normalizes_provider_timeout(client: TestClient):
     async def timed_out_provider(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("Provider timed out", request=request)

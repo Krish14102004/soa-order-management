@@ -8,6 +8,7 @@ import {
   Check,
   CircleAlert,
   Clock3,
+  History,
   Package,
   RefreshCw,
   ShoppingBasket,
@@ -22,6 +23,7 @@ import {
   discoverServices,
   getServices,
   getTraces,
+  listOrders,
   listProducts,
 } from './services/apiClient';
 import type {
@@ -32,13 +34,14 @@ import type {
   ServiceDescriptor,
 } from './types/api';
 
-type Page = 'dashboard' | 'registry' | 'orders' | 'traces';
+type Page = 'dashboard' | 'registry' | 'orders' | 'history' | 'traces';
 type Cart = Record<string, number>;
 
 const navigation: Array<{ id: Page; label: string; icon: typeof Activity }> = [
   { id: 'dashboard', label: 'Dashboard', icon: Workflow },
   { id: 'registry', label: 'Service Registry', icon: Boxes },
   { id: 'orders', label: 'Orders', icon: ShoppingBasket },
+  { id: 'history', label: 'Order History', icon: History },
   { id: 'traces', label: 'Message Trace', icon: Activity },
 ];
 
@@ -58,6 +61,11 @@ const titles: Record<Page, { eyebrow: string; heading: string; description: stri
     heading: 'Create an order',
     description: 'Choose catalog items, agree to the v1 contract, and send the request through the ESB.',
   },
+  history: {
+    eyebrow: 'ORDER RECORDS',
+    heading: 'Order history',
+    description: 'Review saved orders returned by the Order Service through its published contract.',
+  },
   traces: {
     eyebrow: 'MESSAGE OBSERVABILITY',
     heading: 'Routing trace',
@@ -67,6 +75,13 @@ const titles: Record<Page, { eyebrow: string; heading: string; description: stri
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'An unexpected error occurred.';
+}
+
+function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
 }
 
 function shortId(value: string): string {
@@ -210,7 +225,7 @@ function ArchitectureMap() {
         <div className="architecture-node provider-node">
           <div className="node-symbol"><Store size={18} aria-hidden="true" /></div>
           <strong>Order</strong>
-          <span>Create · retrieve</span>
+          <span>Create · history</span>
         </div>
       </div>
       <div className="provider-publish">
@@ -268,6 +283,7 @@ export default function App() {
   const [page, setPage] = useState<Page>('dashboard');
   const [services, setServices] = useState<ServiceDescriptor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [traces, setTraces] = useState<MessageTrace[]>([]);
   const [cart, setCart] = useState<Cart>({});
   const [lastOrder, setLastOrder] = useState<DispatchResponse<Order> | null>(null);
@@ -276,6 +292,8 @@ export default function App() {
   const [connectionError, setConnectionError] = useState('');
   const [orderError, setOrderError] = useState('');
   const [orderBusy, setOrderBusy] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const [health, setHealth] = useState<'checking' | 'online' | 'offline'>('checking');
 
   const refresh = useCallback(async (background = false) => {
@@ -311,6 +329,35 @@ export default function App() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const loadOrderHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      const discovered = await discoverServices('orders');
+      const orderService = discovered.find((service) =>
+        service.operations.some((operation) => operation.name === 'list-orders'),
+      );
+      if (!orderService) {
+        throw new ApiClientError(
+          'No discovered Order service publishes list-orders.',
+          404,
+          'order_history_unavailable',
+          null,
+        );
+      }
+      const result = await listOrders(orderService);
+      setOrders(result.payload.orders);
+    } catch (error) {
+      setHistoryError(getErrorMessage(error));
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (page === 'history') void loadOrderHistory();
+  }, [page, loadOrderHistory]);
 
   const pageInfo = titles[page];
   const selectedCount = Object.keys(cart).length;
@@ -360,6 +407,7 @@ export default function App() {
       setLastOrder(result);
       setCart({});
       await refresh(true);
+      await loadOrderHistory();
     } catch (error) {
       setOrderError(getErrorMessage(error));
       try {
@@ -459,6 +507,13 @@ export default function App() {
               onPlaceOrder={() => void submitOrder()}
               onQuantityChange={updateCartQuantity}
               products={products}
+            />
+          ) : page === 'history' ? (
+            <OrderHistoryPage
+              error={historyError}
+              loading={historyLoading}
+              onRefresh={() => void loadOrderHistory()}
+              orders={orders}
             />
           ) : (
             <TracesPage traces={traces} />
@@ -725,6 +780,93 @@ function OrdersPage({
         )}
       </aside>
     </div>
+  );
+}
+
+function OrderHistoryPage({
+  error,
+  loading,
+  onRefresh,
+  orders,
+}: {
+  error: string;
+  loading: boolean;
+  onRefresh: () => void;
+  orders: Order[];
+}) {
+  return (
+    <section className="panel order-history-panel">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">ORDER SERVICE · DISCOVERED</p>
+          <h2>Saved orders</h2>
+        </div>
+        <button
+          className="button button-secondary"
+          disabled={loading}
+          onClick={onRefresh}
+          type="button"
+        >
+          <RefreshCw size={14} className={loading ? 'spin' : ''} aria-hidden="true" />
+          Refresh history
+        </button>
+      </div>
+      {error && (
+        <div className="alert alert-error" role="alert">
+          <CircleAlert size={16} aria-hidden="true" />
+          <div><strong>Could not load order history</strong><p>{error}</p></div>
+        </div>
+      )}
+      {loading && !orders.length ? (
+        <div className="loading-panel" role="status"><span className="spinner" />Loading saved orders…</div>
+      ) : orders.length ? (
+        <div className="table-scroll">
+          <table className="trace-table order-history-table">
+            <thead>
+              <tr>
+                <th>Placed</th>
+                <th>Order ID</th>
+                <th>Items</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.order_id}>
+                  <td>{formatDateTime(order.created_at)}</td>
+                  <td><code title={order.order_id}>{order.order_id}</code></td>
+                  <td>
+                    <ul className="order-history-items">
+                      {order.items.map((item, index) => (
+                        <li key={`${item.product_id}-${index}`}>
+                          <span>{item.product_id}</span>
+                          <span>× {item.quantity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td><span className={`order-status ${order.status}`}>{order.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : !error ? (
+        <div className="empty-state">
+          <History size={23} aria-hidden="true" />
+          <strong>{loading ? 'Loading order history' : 'No orders yet'}</strong>
+          <span>
+            {loading
+              ? 'The Order Service is returning saved orders.'
+              : 'Orders confirmed by the Order Service will appear here.'}
+          </span>
+        </div>
+      ) : null}
+      <div className="info-strip">
+        <History size={16} aria-hidden="true" />
+        <span>History is loaded from the Order Service and persisted in its SQLite-owned order table.</span>
+      </div>
+    </section>
   );
 }
 

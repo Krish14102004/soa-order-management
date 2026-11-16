@@ -14,7 +14,7 @@ $env:DATABASE_PATH = $demoDatabase
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-The timestamped database path keeps existing local orders untouched. The test suite should report 28 passing tests. In a second PowerShell terminal, start the consumer:
+The timestamped database path keeps existing local orders untouched. The test suite should report 31 passing tests. In a second PowerShell terminal, start the consumer:
 
 ```powershell
 cd D:\SOA_Order_Management_Starter\soa-order-management\frontend
@@ -48,6 +48,8 @@ Open **Orders**, choose a product, and submit a quantity of `1`.
 Expected: the UI returns a confirmed order and displays its order ID and correlation ID. Explain that the Consumer used Registry discovery and sent the request to the Order provider through the ESB; Order checked availability by calling Catalog over HTTP.
 
 Open **Message Trace** (or the Dashboard's latest-message panel). Find the `create-order` trace and match its correlation ID and destination to the response.
+
+Open **Order History** and point out that the new order appears with its persisted items, status, and timestamp. Refresh the browser or reopen the page and verify that the order is still listed. Explain that the consumer discovers the Order Service's `list-orders` capability from registry metadata and retrieves it through the ESB.
 
 ## 4. Demonstrate policy and error behavior
 

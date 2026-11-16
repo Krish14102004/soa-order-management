@@ -9,7 +9,12 @@ from app.contracts.catalog import (
     ProductContract,
     ProductListResponse,
 )
-from app.contracts.orders import CreateOrderRequest, GetOrderRequest, OrderResponse
+from app.contracts.orders import (
+    CreateOrderRequest,
+    GetOrderRequest,
+    OrderListResponse,
+    OrderResponse,
+)
 from app.core.models import StrictModel
 
 
@@ -49,6 +54,12 @@ DISPATCH_POLICIES: dict[tuple[str, str], OperationPolicy] = {
         "/api/orders",
         CreateOrderRequest,
         OrderResponse,
+    ),
+    ("order-service", "list-orders"): OperationPolicy(
+        "GET",
+        "/api/orders",
+        EmptyRequest,
+        OrderListResponse,
     ),
     ("order-service", "get-order"): OperationPolicy(
         "GET",

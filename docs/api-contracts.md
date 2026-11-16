@@ -34,10 +34,12 @@ The catalog seeds three synthetic products at first database initialization. The
 
 - `CreateOrderRequest`: one to 100 `OrderItemContract` entries, each with a `product_id` and positive `quantity`.
 - `OrderResponse`: UUID `order_id`, `status` (`pending`, `confirmed`, or `rejected`), submitted items, and `created_at`.
+- `OrderListResponse`: `orders: OrderResponse[]`, ordered newest first.
 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/api/orders` | Check each item against Catalog, then persist a confirmed order (`201`). Insufficient/unknown product availability returns `409`; Catalog unavailable/timeout returns `503`/`504`. |
+| `GET` | `/api/orders` | Return persisted Order history, newest first. |
 | `GET` | `/api/orders/{order_id}` | Retrieve a saved order; returns `404` when missing. |
 
 The Order Service owns its SQLite order table and calls Catalog over HTTP for availability. Monetary totals are intentionally not part of v1 because the PRD does not define pricing or currency.
@@ -55,6 +57,6 @@ The Order Service owns its SQLite order table and calls Catalog over HTTP for av
 | `POST` | `/api/esb/dispatch` | Validate a v1 envelope and operation payload, resolve the provider via the registry, route over HTTP, validate the provider response, and normalize errors. |
 | `GET` | `/api/esb/traces?limit=50` | Return recent traces; `limit` is 1–100 and history is bounded to the latest 200 messages. |
 
-Dispatch supports the registered Catalog operations `list-products`, `get-product`, and `check-availability`, and Order operations `create-order` and `get-order`. An unknown service/operation returns `404`; an unsupported gateway operation returns `501`; contract mismatch or invalid payload returns `422`; provider timeout returns `504`; provider unavailability returns `503`; and malformed provider output returns `502`. The response preserves the message and correlation IDs. The correlation ID is also propagated in `X-Correlation-ID`.
+Dispatch supports the registered Catalog operations `list-products`, `get-product`, and `check-availability`, and Order operations `create-order`, `list-orders`, and `get-order`. The consumer discovers `list-orders` from the Order Service registry descriptor and invokes it through the ESB; it does not call the provider endpoint directly. An unknown service/operation returns `404`; an unsupported gateway operation returns `501`; contract mismatch or invalid payload returns `422`; provider timeout returns `504`; provider unavailability returns `503`; and malformed provider output returns `502`. The response preserves the message and correlation IDs. The correlation ID is also propagated in `X-Correlation-ID`.
 
 The provider URLs and timeout are configurable with `CATALOG_SERVICE_URL`, `ORDER_SERVICE_URL`, and `ESB_TIMEOUT_SECONDS`. Both service URLs must be local loopback HTTP URLs in this demo.

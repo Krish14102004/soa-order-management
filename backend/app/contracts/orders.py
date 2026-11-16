@@ -31,3 +31,7 @@ class OrderResponse(StrictModel):
     status: OrderStatus
     items: list[OrderItemContract]
     created_at: datetime
+
+
+class OrderListResponse(StrictModel):
+    orders: list[OrderResponse]

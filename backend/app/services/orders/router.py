@@ -3,7 +3,7 @@ from typing import Annotated
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
 
-from app.contracts.orders import CreateOrderRequest, OrderResponse
+from app.contracts.orders import CreateOrderRequest, OrderListResponse, OrderResponse
 from app.services.orders.logic import create_order
 from app.services.orders.repository import OrderRepository
 
@@ -37,6 +37,13 @@ async def submit_order(
             client,
             request.state.correlation_id,
         )
+
+
+@router.get("", response_model=OrderListResponse)
+def list_orders(
+    repository: Annotated[OrderRepository, Depends(get_repository)],
+) -> OrderListResponse:
+    return OrderListResponse(orders=repository.list_orders())
 
 
 @router.get("/{order_id}", response_model=OrderResponse)

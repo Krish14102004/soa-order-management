@@ -56,6 +56,21 @@ class OrderRepository:
             ).fetchone()
         if row is None:
             return None
+        return self._to_order(row)
+
+    def list_orders(self) -> list[OrderResponse]:
+        with sqlite3.connect(self._database_path) as connection:
+            rows = connection.execute(
+                """
+                SELECT order_id, status, items_json, created_at
+                FROM customer_orders
+                ORDER BY created_at DESC, rowid DESC
+                """
+            ).fetchall()
+        return [self._to_order(row) for row in rows]
+
+    @staticmethod
+    def _to_order(row: tuple[str, str, str, str]) -> OrderResponse:
         return OrderResponse(
             order_id=row[0],
             status=OrderStatus(row[1]),

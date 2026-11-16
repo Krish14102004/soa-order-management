@@ -45,3 +45,13 @@ Do not claim work is complete unless it has been implemented and verified.
 - Test result: The backend suite reports one existing Starlette/httpx deprecation warning; the frontend build reports two informational Lucide module-directive warnings. No failures.
 - Failure-path evidence: Existing tests cover payload and version validation, unknown services/operations, provider unavailable/timeout, business conflict, and correlation traces. Phase 4 browser verification covered successful ordering and visible 409 errors.
 - Blockers: None. No screenshots were committed; the demo script is usable without them.
+
+## 2026-11-16 — Order history added
+
+- Completed: Added a typed Order Service history response and `GET /api/orders`, newest-first repository query, registry publication and ESB policy for `list-orders`, plus an Order History navigation page that fetches real saved orders through discovery and gateway dispatch. The page displays order ID, date/time, items, and status with loading, empty, retry/error, and populated states.
+- Updated: `PRD.md`, `architecture.md`, `backend/app/contracts/orders.py`, `backend/app/services/orders/repository.py`, `backend/app/services/orders/router.py`, `backend/app/main.py`, `backend/app/esb/policies.py`, `backend/tests/test_providers.py`, `backend/tests/test_esb.py`, `frontend/src/types/api.ts`, `frontend/src/services/apiClient.ts`, `frontend/src/App.tsx`, `frontend/src/styles/global.css`, `docs/api-contracts.md`, `docs/decisions.md`, `docs/demo-script.md`, and `README.md`.
+- Current status: Original six phases remain complete. This is a feature extension to FR-01/FR-03/FR-06 and adds FR-13; no new infrastructure or stack changes were introduced.
+- Commands actually checked: `.\.venv\Scripts\python.exe -m pytest tests\test_providers.py tests\test_esb.py -q` passed 20 tests; `.\.venv\Scripts\python.exe -m pytest -q` passed all 31 tests; `npm.cmd run build` passed with TypeScript and Vite; `git diff --check` passed.
+- Test result: One existing Starlette/httpx deprecation warning and two informational Lucide bundling warnings; no failures.
+- Browser verification: Started an isolated backend on port 8001 with a temporary SQLite file and Vite on the CORS-allowed port 5173. Confirmed backend health and registry publication, placed an order through the consumer, navigated to Order History, and verified the persisted order ID, timestamp, product, quantity, and confirmed status. The temporary servers and database are being stopped/removed after verification.
+- Blockers: None. No developer installation/configuration action is required.

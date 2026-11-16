@@ -16,7 +16,7 @@ Read these before implementation:
 
 ## Current status
 
-Phases 1–6 are implemented and verified. The React consumer discovers providers through the registry, sends catalog and order requests through the ESB, and displays real orders and message traces. SQLite-backed product and order data survives backend restarts; registry entries and ESB traces are recreated in memory at startup. See [docs/demo-script.md](docs/demo-script.md) for a Windows-first walkthrough.
+Phases 1–6 are implemented and verified. The React consumer discovers providers through the registry, sends catalog, order, and order-history requests through the ESB, and displays real orders and message traces. SQLite-backed product and order data survives backend restarts; registry entries and ESB traces are recreated in memory at startup. See [docs/demo-script.md](docs/demo-script.md) for a Windows-first walkthrough.
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ py -3.13 -m venv .venv
 
 Replace `3.13` with your installed Python version if it is 3.11 or later.
 
-The test command should report 28 passing tests. Leave the backend running, then check it from another terminal:
+The test command should report 31 passing tests. Leave the backend running, then check it from another terminal:
 
 ```powershell
 curl.exe -i http://127.0.0.1:8000/health
@@ -80,7 +80,26 @@ Invoke-RestMethod `
     -Body $body
 ```
 
-The response contains the correlation ID, provider HTTP status, and order payload. View recent routing traces with:
+The response contains the correlation ID, provider HTTP status, and order payload. View persisted order history through the published Order Service operation via ESB:
+
+```powershell
+$historyEnvelope = @{
+    service = "order-service"
+    operation = "list-orders"
+    contract_version = "v1"
+    payload = @{}
+}
+$historyBody = $historyEnvelope | ConvertTo-Json -Depth 6
+Invoke-RestMethod `
+    -Uri http://127.0.0.1:8000/api/esb/dispatch `
+    -Method Post `
+    -ContentType "application/json" `
+    -Body $historyBody
+```
+
+In the consumer, select **Order History** to inspect saved order IDs, placement times, items, and statuses. The history is read from the Order Service's SQLite repository; it is not reconstructed from browser state.
+
+View recent routing traces with:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/esb/traces

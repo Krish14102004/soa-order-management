@@ -34,6 +34,7 @@ SOA concepts are often taught as separate definitions. This project makes them o
 - Add a product and quantity to an order.
 - Submit an order using the published contract.
 - View order status and response details.
+- Review previously saved orders and their items, status, and placement time.
 
 ### F2. Service Provider
 - Catalog Service: return products and availability.
@@ -96,6 +97,7 @@ SOA concepts are often taught as separate definitions. This project makes them o
 - FR-10: The UI shall display the lifecycle and message trace.
 - FR-11: Service failures shall produce structured error responses.
 - FR-12: Automated tests shall cover contracts, services, registry, and end-to-end order flow.
+- FR-13: The consumer shall retrieve and display persisted order history through the Order Service contract and ESB.
 
 ## 9. Non-Functional Requirements
 - Maintain clear separation between consumer, registry, ESB, and providers.

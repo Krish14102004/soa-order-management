@@ -41,6 +41,10 @@ export interface Order {
   created_at: string;
 }
 
+export interface OrderList {
+  orders: Order[];
+}
+
 export interface DispatchResponse<T> {
   message_id: string;
   correlation_id: string;

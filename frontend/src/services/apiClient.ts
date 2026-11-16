@@ -3,6 +3,7 @@ import type {
   DispatchResponse,
   MessageTrace,
   Order,
+  OrderList,
   ProductList,
   ServiceDescriptor,
 } from '../types/api';
@@ -127,6 +128,26 @@ export function createOrder(
     operation.name,
     operation.contract_version,
     { items },
+  );
+}
+
+export function listOrders(
+  service: ServiceDescriptor,
+): Promise<DispatchResponse<OrderList>> {
+  const operation = service.operations.find((candidate) => candidate.name === 'list-orders');
+  if (!operation) {
+    throw new ApiClientError(
+      'The discovered Order service does not publish list-orders.',
+      422,
+      'missing_operation',
+      null,
+    );
+  }
+  return dispatch(
+    service.service_name,
+    operation.name,
+    operation.contract_version,
+    {},
   );
 }
 

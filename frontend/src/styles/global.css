@@ -263,6 +263,15 @@ h1 { margin: 0; color: #172033; font-size: clamp(24px, 2.4vw, 32px); font-weight
 .trace-table tbody tr:last-child td { border-bottom: 0; }
 .trace-table tbody tr:hover { background: #FAFBFD; }
 .trace-table td code { color: #596986; font-size: 8px; }
+.order-history-table td { vertical-align: top; }
+.order-history-table td:nth-child(2) code { display: block; max-width: 205px; overflow-wrap: anywhere; white-space: normal; }
+.order-history-items { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.order-history-items li { display: flex; flex-wrap: wrap; gap: 5px; color: #596986; }
+.order-history-items li span:last-child { color: #8591A4; }
+.order-status { display: inline-flex; padding: 4px 7px; border-radius: 12px; font-size: 8px; font-weight: 700; text-transform: capitalize; }
+.order-status.confirmed { color: #16704F; background: var(--success-soft); }
+.order-status.pending { color: #8A641D; background: #FFF4D8; }
+.order-status.rejected { color: #A33B44; background: var(--error-soft); }
 .result-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 12px; font-size: 8px; font-weight: 700; text-transform: capitalize; }
 .result-chip.success { color: #16704F; background: var(--success-soft); }
 .result-chip.failure { color: #A33B44; background: var(--error-soft); }
