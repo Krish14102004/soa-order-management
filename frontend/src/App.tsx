@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   ArrowDownLeft,
@@ -9,10 +9,12 @@ import {
   CircleAlert,
   Clock3,
   History,
+  Moon,
   Package,
   RefreshCw,
   ShoppingBasket,
   Store,
+  Sun,
   Trash2,
   Workflow,
 } from 'lucide-react';
@@ -36,6 +38,125 @@ import type {
 
 type Page = 'dashboard' | 'registry' | 'orders' | 'history' | 'traces';
 type Cart = Record<string, number>;
+type Theme = 'light' | 'dark';
+type ThemeFracture = { accelerating: boolean };
+type Point = { x: number; y: number };
+
+function clipVoronoiCell(polygon: Point[], seed: Point, other: Point): Point[] {
+  const a = 2 * (other.x - seed.x);
+  const b = 2 * (other.y - seed.y);
+  const c = other.x ** 2 + other.y ** 2 - seed.x ** 2 - seed.y ** 2;
+  const clipped: Point[] = [];
+
+  for (let index = 0; index < polygon.length; index += 1) {
+    const current = polygon[index];
+    const previous = polygon[(index + polygon.length - 1) % polygon.length];
+    const currentDistance = a * current.x + b * current.y - c;
+    const previousDistance = a * previous.x + b * previous.y - c;
+    const currentInside = currentDistance <= 0;
+    const previousInside = previousDistance <= 0;
+
+    if (currentInside !== previousInside) {
+      const progress = previousDistance / (previousDistance - currentDistance);
+      clipped.push({
+        x: previous.x + (current.x - previous.x) * progress,
+        y: previous.y + (current.y - previous.y) * progress,
+      });
+    }
+    if (currentInside) clipped.push(current);
+  }
+
+  return clipped;
+}
+
+function createFractureOverlay(surface: HTMLElement): HTMLDivElement {
+  const width = 1000;
+  const height = 1000;
+  const aspect = window.innerWidth / Math.max(window.innerHeight, 1);
+  const targetPieceCount = 18;
+  const columns = Math.max(3, Math.ceil(Math.sqrt(targetPieceCount * aspect)));
+  const rows = Math.max(3, Math.ceil(targetPieceCount / columns));
+  const seeds = Array.from({ length: columns * rows }, (_, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    return {
+      x: (column + 0.5 + (Math.random() - 0.5) * 0.38) * width / columns,
+      y: (row + 0.5 + (Math.random() - 0.5) * 0.38) * height / rows,
+    };
+  });
+  const overlay = document.createElement('div');
+  overlay.className = 'theme-fracture';
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.setAttribute('inert', '');
+  overlay.dataset.surfaceTheme = surface.dataset.theme ?? 'light';
+
+  seeds.forEach((seed) => {
+    let polygon: Point[] = [
+      { x: 0, y: 0 },
+      { x: width, y: 0 },
+      { x: width, y: height },
+      { x: 0, y: height },
+    ];
+    seeds.forEach((other) => {
+      if (other !== seed && polygon.length > 0) {
+        polygon = clipVoronoiCell(polygon, seed, other);
+      }
+    });
+    if (polygon.length < 3) return;
+
+    const center = polygon.reduce(
+      (total, point) => ({ x: total.x + point.x, y: total.y + point.y }),
+      { x: 0, y: 0 },
+    );
+    center.x /= polygon.length;
+    center.y /= polygon.length;
+    const distanceFromOrigin = Math.hypot(center.x / width, center.y / height) / Math.SQRT2;
+    const piece = document.createElement('div');
+    piece.className = 'theme-fracture-piece';
+    piece.style.clipPath = `polygon(${polygon
+      .map((point) => `${(point.x / width) * 100}% ${(point.y / height) * 100}%`)
+      .join(', ')})`;
+    piece.style.setProperty('--piece-delay', `${Math.round(distanceFromOrigin * 650 + Math.random() * 140)}ms`);
+    piece.style.setProperty('--piece-x', `${(Math.random() - 0.5) * 36}vw`);
+    piece.style.setProperty('--piece-y', `${4 + Math.random() * 20}vh`);
+    piece.style.setProperty('--piece-rotation', `${(Math.random() - 0.5) * 56}deg`);
+
+    const snapshot = surface.cloneNode(true) as HTMLElement;
+    snapshot.setAttribute('aria-hidden', 'true');
+    snapshot.setAttribute('inert', '');
+    snapshot.style.position = 'absolute';
+    snapshot.style.top = `${-window.scrollY}px`;
+    snapshot.style.left = '0';
+    snapshot.style.width = '100vw';
+    snapshot.style.minHeight = '100vh';
+    snapshot.style.pointerEvents = 'none';
+    snapshot.removeAttribute('id');
+    snapshot.querySelectorAll('[id]').forEach((element) => element.removeAttribute('id'));
+    piece.append(snapshot);
+    overlay.append(piece);
+  });
+
+  return overlay;
+}
+
+function readThemePreference(): Theme {
+  try {
+    return window.localStorage.getItem('soa-order-management-theme') === 'dark'
+      ? 'dark'
+      : 'light';
+  } catch (error) {
+    console.warn('Could not read the saved theme preference.', error);
+    return 'light';
+  }
+}
+
+function saveThemePreference(theme: Theme): void {
+  try {
+    window.localStorage.setItem('soa-order-management-theme', theme);
+  } catch (error) {
+    console.warn('Could not save the theme preference.', error);
+  }
+}
 
 const navigation: Array<{ id: Page; label: string; icon: typeof Activity }> = [
   { id: 'dashboard', label: 'Dashboard', icon: Workflow },
@@ -281,6 +402,10 @@ function Lifecycle({
 
 export default function App() {
   const [page, setPage] = useState<Page>('dashboard');
+  const [theme, setTheme] = useState<Theme>(readThemePreference);
+  const [themeFracture, setThemeFracture] = useState<ThemeFracture | null>(null);
+  const appShellRef = useRef<HTMLDivElement>(null);
+  const fractureOverlayRef = useRef<HTMLDivElement | null>(null);
   const [services, setServices] = useState<ServiceDescriptor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -295,6 +420,41 @@ export default function App() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
   const [health, setHealth] = useState<'checking' | 'online' | 'offline'>('checking');
+
+  useEffect(() => {
+    if (!themeFracture) return undefined;
+    const timeout = window.setTimeout(
+      () => {
+        fractureOverlayRef.current?.remove();
+        fractureOverlayRef.current = null;
+        setThemeFracture(null);
+      },
+      themeFracture.accelerating ? 520 : 5050,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [themeFracture]);
+
+  const toggleTheme = () => {
+    if (themeFracture) {
+      if (!themeFracture.accelerating) {
+        if (fractureOverlayRef.current) {
+          fractureOverlayRef.current.dataset.accelerating = 'true';
+        }
+        setThemeFracture({ ...themeFracture, accelerating: true });
+      }
+      return;
+    }
+
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && appShellRef.current) {
+      const overlay = createFractureOverlay(appShellRef.current);
+      document.body.append(overlay);
+      fractureOverlayRef.current = overlay;
+      setThemeFracture({ accelerating: false });
+    }
+    setTheme(nextTheme);
+    saveThemePreference(nextTheme);
+  };
 
   const refresh = useCallback(async (background = false) => {
     if (background) setRefreshing(true);
@@ -421,7 +581,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-theme={theme} ref={appShellRef}>
       <aside className="sidebar">
         <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setPage('dashboard'); }}>
           <span className="brand-mark"><Workflow size={20} aria-hidden="true" /></span>
@@ -457,9 +617,33 @@ export default function App() {
       <main className="main-area">
         <header className="topbar">
           <div className="breadcrumb">SOA ORDER MANAGEMENT <span>/</span> {pageInfo.eyebrow}</div>
-          <div className={`connection-pill ${health}`}>
-            <span className="connection-dot" />
-            {health === 'online' ? 'Backend connected' : health === 'offline' ? 'Backend unavailable' : 'Connecting'}
+          <div className="topbar-actions">
+            <button
+              aria-label={
+                themeFracture
+                  ? themeFracture.accelerating ? 'Finishing theme change' : 'Finish theme change sooner'
+                  : `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`
+              }
+              aria-pressed={theme === 'dark'}
+              className="theme-toggle"
+              disabled={themeFracture?.accelerating ?? false}
+              onClick={toggleTheme}
+              title={
+                themeFracture
+                  ? 'Finish theme change sooner'
+                  : `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`
+              }
+              type="button"
+            >
+              {theme === 'light'
+                ? <Moon size={16} aria-hidden="true" />
+                : <Sun size={16} aria-hidden="true" />}
+              <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+            </button>
+            <div className={`connection-pill ${health}`}>
+              <span className="connection-dot" />
+              {health === 'online' ? 'Backend connected' : health === 'offline' ? 'Backend unavailable' : 'Connecting'}
+            </div>
           </div>
         </header>
         <div className="content-wrap">

@@ -18,6 +18,8 @@ Read these before implementation:
 
 Phases 1–6 are implemented and verified. The React consumer discovers providers through the registry, sends catalog, order, and order-history requests through the ESB, and displays real orders and message traces. SQLite-backed product and order data survives backend restarts; registry entries and ESB traces are recreated in memory at startup. See [docs/demo-script.md](docs/demo-script.md) for a Windows-first walkthrough.
 
+The dashboard also supports persistent light and dark themes. Use the top-bar toggle to switch themes; the actual outgoing page separates into randomly shaped fragments, starting near the top-left, and falls away to reveal the new theme beneath it. The reveal takes roughly five seconds. Activating the toggle again during the effect speeds it to completion. The effect is skipped when the operating system requests reduced motion.
+
 ## Prerequisites
 
 - Python 3.11 or later.

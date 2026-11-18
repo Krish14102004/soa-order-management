@@ -4,7 +4,8 @@
 A clean, modern technical operations dashboard. It should feel like a polished developer tool, not a generic shopping template. The e-commerce scenario is the teaching example; the SOA architecture is the main subject.
 
 ## 2. Theme
-- Default: light theme.
+- Default: light theme, with a persistent user-selectable dark theme.
+- Dark theme: deep navy page background (`#0D111B`), charcoal surfaces (`#171E2B`), pale text (`#E8ECF4`), muted slate labels, and lightened indigo/teal accents. Preserve clear status colors and contrast in both themes.
 - Background: soft cool gray (`#F5F7FA`).
 - Surface/cards: white (`#FFFFFF`).
 - Primary: deep indigo (`#3446A5`).
@@ -17,7 +18,7 @@ A clean, modern technical operations dashboard. It should feel like a polished d
 - Warning: amber (`#B7791F`).
 - Error: red (`#C2414B`).
 
-Use color consistently and never rely on color alone to communicate status.
+Use color consistently and never rely on color alone to communicate status. Place the theme toggle in the top bar and provide an accessible name describing the destination theme.
 
 ## 3. Typography
 - Font family: Inter, with system sans-serif fallback.
@@ -45,7 +46,7 @@ Use color consistently and never rely on color alone to communicate status.
 
 ## 6. Interaction States
 Every data-driven view must include loading, empty, error, and populated states.
-Use restrained transitions for navigation and state changes. Avoid animation that obscures message flow or makes technical details harder to follow.
+Use restrained transitions for navigation and routine state changes. Theme changes are the deliberate exception: the outgoing page itself separates into irregular, randomly arranged fragments, beginning near the top-left and falling away over 4–5 seconds to reveal the destination theme directly beneath it. Do not cover the page with an intermediate surface or regular grid. Use the same pacing in both directions. A second activation during the reveal accelerates it to completion instead of reversing it. Respect `prefers-reduced-motion` by switching themes without the fracture animation.
 
 ## 7. Accessibility
 - Maintain readable contrast.

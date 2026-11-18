@@ -55,3 +55,13 @@ Do not claim work is complete unless it has been implemented and verified.
 - Test result: One existing Starlette/httpx deprecation warning and two informational Lucide bundling warnings; no failures.
 - Browser verification: Started an isolated backend on port 8001 with a temporary SQLite file and Vite on the CORS-allowed port 5173. Confirmed backend health and registry publication, placed an order through the consumer, navigated to Order History, and verified the persisted order ID, timestamp, product, quantity, and confirmed status. The temporary servers and database are being stopped/removed after verification.
 - Blockers: None. No developer installation/configuration action is required.
+
+## 2026-11-19 — Dramatic theme toggle implementation
+
+- Completed: Added persistent light/dark theme state and an accessible top-bar control. The outgoing page is cloned into irregular Voronoi-shaped fragments that fall away to reveal the destination theme directly beneath them; there is no opaque intermediate surface or regular rectangular grid. A second activation accelerates the reveal, and `prefers-reduced-motion` switches immediately. Added dark-mode surface, text, table, status, and provider-diagram styling.
+- Updated: `frontend/src/App.tsx`, `frontend/src/styles/global.css`, `design.md`, `README.md`, and `memory.md`.
+- Current status: Theme toggle implementation and verification are complete; no phase status changed.
+- Commands actually checked: `npm.cmd run build` passed with TypeScript and Vite; `git diff --check` passed.
+- Browser verification: Confirmed 21 distinct irregular pieces at the tested viewport, with the old theme retained in the fragments while the new theme is rendered beneath. Verified both directions, accelerated completion after a second activation, normal reveal completion, reduced-motion immediate switching, and saved theme restoration after reload.
+- Warnings: Build reports two informational lucide-react module-directive warnings. No failures.
+- Limitations/blockers: No new dependencies were added. Theme preference is stored in browser localStorage; storage access failures are warned and the in-session toggle still works. The browser check used the local frontend while the backend was unavailable; backend behavior is unrelated to theme transitions.
